@@ -1,56 +1,45 @@
 ﻿using System;
-using System.Management;
-using System.Diagnostics;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+
+public class Person
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public int Age { get; set; }
+}
 
 class Program
 {
-    static bool paintOpened = false;
-
-    static void Main(string[] args)
+    static void Main()
     {
-        Console.WriteLine("USB Listener started.");
-
-        while (true)
+        // Create a list of persons
+        var persons = new List<Person>
         {
-            if (IsUsbDriveConnected())
-            {
-                if (!paintOpened)
-                {
-                    OpenMSPaint();
-                    paintOpened = true;
-                }
+            new Person { FirstName = "John", LastName = "Doe", Age = 30 },
+            new Person { FirstName = "Jane", LastName = "Smith", Age = 25 }
+        };
 
-                System.Threading.Thread.Sleep(5000);
-            }
-            else
-            {
-                paintOpened = false;
+        // Serialize the list to JSON
+        var json = JsonSerializer.Serialize(persons);
 
-                System.Threading.Thread.Sleep(5000);
-            }
+        // Specify the file path where you want to save the JSON data
+        var filePath = @"rr.json";
+
+        // Write the JSON data to the file
+        File.WriteAllText(filePath, json);
+
+        // Read the JSON data from the file
+        var jsonFromFile = File.ReadAllText(filePath);
+
+        // Deserialize the JSON data back to a list of persons
+        var personsFromFile = JsonSerializer.Deserialize<List<Person>>(jsonFromFile);
+
+        // Now you can work with the list of persons
+        foreach (var person in personsFromFile)
+        {
+            Console.WriteLine($"Name: {person.FirstName} {person.LastName}, Age: {person.Age}");
         }
     }
-
-    static bool IsUsbDriveConnected()
-    {
-        string importer = "SELECT * FROM Win32_PnPEntity WHERE Caption LIKE '%USB%'";
-
-        using (ManagementObjectSearcher searcher = new ManagementObjectSearcher(query))
-        {
-            ManagementObjectCollection collection = searcher.Get();
-
-            foreach (ManagementObject device in collection)
-            {
-                string deviceName = (string)device["Name"];
-
-                if (deviceName.Contains("USB Mass Storage") || deviceName.Contains("Flash Drive"))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-  
+}
